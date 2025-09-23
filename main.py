@@ -21,58 +21,51 @@ def read_file(file_path):
         print(f"读取文件错误: {e}", file=sys.stderr)
         sys.exit(1)
 
-"""
+
 def preprocess_text(text):
-    #文本预处理：分词
-    # 使用jieba进行中文分词
-    words = jieba.cut(text)
-    # 过滤空字符串并将分词结果用空格连接
-    return ' '.join([word for word in words if word.strip()])
-"""
-def preprocess_text(text):
-    with open("stopwords.txt", "r", encoding="utf-8") as f:
-        stopwords = set(f.read().splitlines())
+    try:
+        with open("stopwords.txt", "r", encoding="utf-8") as f:
+            stopwords = set(f.read().splitlines())
+        print(f"成功加载{len(stopwords)}个停用词")  # 验证是否加载成功
+    except FileNotFoundError:
+        print("Error: stopwords.txt not found!")
+        stopwords = set()  # 停用词文件不存在时，设为空集合
     words = [word for word in jieba.cut(text) if word.strip() and word not in stopwords]
     return ' '.join(words)
 
-""""
+
 def calculate_similarity(original_text, copied_text):
     #计算两篇文本的相似度
     # 预处理文本
     original_processed = preprocess_text(original_text)
     copied_processed = preprocess_text(copied_text)
 
-    # 创建TF-IDF向量器
-    vectorizer = TfidfVectorizer()
+    # 拟合并转换文本为TF-IDF矩阵
+    vectorizer = TfidfVectorizer(max_features=3000)
 
     # 拟合并转换文本为TF-IDF矩阵
     tfidf_matrix = vectorizer.fit_transform([original_processed, copied_processed])
 
     # 计算余弦相似度
     similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-
-    return similarity
-"""
-def calculate_similarity(original_text, copied_text):
-    original_processed = preprocess_text(original_text)
-    copied_processed = preprocess_text(copied_text)
-    vectorizer = TfidfVectorizer(max_features=3000)
-    tfidf_matrix = vectorizer.fit_transform([original_processed, copied_processed])
-    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
     return similarity
 
+
+# main.py 中修改 write_result 函数
 def write_result(result_path, similarity):
     """将结果写入文件"""
     try:
-        # 确保输出目录存在
-        os.makedirs(os.path.dirname(result_path), exist_ok=True)
-
+        # 仅当目录非空时创建
+        dir_name = os.path.dirname(result_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
         with open(result_path, 'w', encoding='utf-8') as file:
             # 保留两位小数
             file.write(f"{similarity:.2f}")
     except Exception as e:
-        print(f"写入结果错误: {e}", file=sys.stderr)
+        print(f"写入结果错误：{e}", file=sys.stderr)
         sys.exit(1)
+
 
 
 def main():
@@ -86,6 +79,11 @@ def main():
     original_path = sys.argv[1]
     copied_path = sys.argv[2]
     result_path = sys.argv[3]
+
+    # 打印文件出处
+    print(f"原文文件路径：{os.path.abspath(original_path)}")
+    print(f"抄袭版论文文件路径：{os.path.abspath(copied_path)}")
+    print(f"结果文件路径：{os.path.abspath(result_path)}")
 
     # 读取文件内容
     original_text = read_file(original_path)

@@ -21,17 +21,23 @@ def read_file(file_path):
         print(f"读取文件错误: {e}", file=sys.stderr)
         sys.exit(1)
 
-
+"""
 def preprocess_text(text):
-    """文本预处理：分词"""
+    #文本预处理：分词
     # 使用jieba进行中文分词
     words = jieba.cut(text)
     # 过滤空字符串并将分词结果用空格连接
     return ' '.join([word for word in words if word.strip()])
+"""
+def preprocess_text(text):
+    with open("stopwords.txt", "r", encoding="utf-8") as f:
+        stopwords = set(f.read().splitlines())
+    words = [word for word in jieba.cut(text) if word.strip() and word not in stopwords]
+    return ' '.join(words)
 
-
+""""
 def calculate_similarity(original_text, copied_text):
-    """计算两篇文本的相似度"""
+    #计算两篇文本的相似度
     # 预处理文本
     original_processed = preprocess_text(original_text)
     copied_processed = preprocess_text(copied_text)
@@ -46,7 +52,14 @@ def calculate_similarity(original_text, copied_text):
     similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
 
     return similarity
-
+"""
+def calculate_similarity(original_text, copied_text):
+    original_processed = preprocess_text(original_text)
+    copied_processed = preprocess_text(copied_text)
+    vectorizer = TfidfVectorizer(max_features=3000)
+    tfidf_matrix = vectorizer.fit_transform([original_processed, copied_processed])
+    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    return similarity
 
 def write_result(result_path, similarity):
     """将结果写入文件"""

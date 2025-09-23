@@ -6,9 +6,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def read_file(file_path):
-    """读取文件内容"""
     try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"文件不存在: {file_path}")
+        if not os.path.isfile(file_path):
+            raise IsADirectoryError(f"路径不是文件: {file_path}")
         with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+    except UnicodeDecodeError:
+        # 尝试其他编码（如GBK）
+        with open(file_path, 'r', encoding='gbk', errors='ignore') as file:
             return file.read()
     except Exception as e:
         print(f"读取文件错误: {e}", file=sys.stderr)
